@@ -1,0 +1,31 @@
+pipeline {
+  agent any
+  environment {
+    AWS_ACCESS_KEY_ID     = credentials('aws-credentials')
+    AWS_SECRET_ACCESS_KEY = credentials('aws-credentials')
+  }
+  stages {
+    stage('Terraform Apply') {
+      steps {
+        dir('terraform') {
+          withEnv([
+            "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
+            "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}"
+          ]) {
+            sh 'terraform init'
+            sh 'terraform apply -auto-approve'
+          }
+        }
+      }
+    }
+    stage('Ansible Deploy') {
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-lightsail-key', keyFileVariable: 'SSH_KEY')]) {
+          dir('ansible') {
+            sh 'ansible-playbook -i inventory.ini playbook.yml --private-key $SSH_KEY -u ubuntu'
+          }
+        }
+      }
+    }
+  }
+}
