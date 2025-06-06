@@ -1,23 +1,25 @@
 pipeline {
   agent any
-  environment {
-    AWS_ACCESS_KEY_ID     = credentials('aws-credentials')
-    AWS_SECRET_ACCESS_KEY = credentials('aws-credentials')
-  }
+
   stages {
     stage('Terraform Apply') {
       steps {
-        dir('Automation/terraform') {
-          withEnv([
-            "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
-            "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}"
-          ]) {
-            sh 'terraform init'
-            sh 'terraform apply -auto-approve'
+        withCredentials([
+          string(credentialsId: 'AWS_ACCESS_KEY_ID_CRED_ID', variable: 'AWS_ACCESS_KEY_ID'),
+          string(credentialsId: 'AWS_SECRET_ACCESS_KEY_CRED_ID', variable: 'AWS_SECRET_ACCESS_KEY')
+        ]) {
+          dir('Automation/terraform') {
+            sh '''
+              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+              terraform init
+              terraform apply -auto-approve
+            '''
           }
         }
       }
     }
+
     stage('Ansible Deploy') {
       steps {
         withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-lightsail-key', keyFileVariable: 'SSH_KEY')]) {
