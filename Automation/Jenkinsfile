@@ -7,7 +7,7 @@ pipeline {
   stages {
     stage('Terraform Apply') {
       steps {
-        dir('terraform') {
+        dir('Automation/terraform') {
           withEnv([
             "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
             "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}"
@@ -21,7 +21,7 @@ pipeline {
     stage('Ansible Deploy') {
       steps {
         withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-lightsail-key', keyFileVariable: 'SSH_KEY')]) {
-          dir('ansible') {
+          dir('Automation/ansible') {
             sh 'ansible-playbook -i inventory.ini playbook.yml --private-key $SSH_KEY -u ubuntu'
           }
         }
