@@ -1,10 +1,13 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
 }
 
 resource "aws_instance" "web" {
-  ami           = "ami-0953476d60561c955"  # Replace with your AMI
-  instance_type = "t2.micro"
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  subnet_id     = var.subnet_id
+  key_name      = var.key_name
+  vpc_security_group_ids = [var.security_group_id]
 
   tags = {
     Name = "WebServer"
