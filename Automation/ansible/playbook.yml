@@ -1,5 +1,17 @@
-- name: Install Nginx (Amazon Linux)
-  ansible.builtin.yum:
-    name: nginx
-    state: present
-  become: true
+---
+- name: Install Nginx on appropriate OS
+  hosts: web
+  become: yes
+  tasks:
+    - name: Install Nginx on Debian/Ubuntu
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Nginx on Amazon Linux/RedHat
+      ansible.builtin.yum:
+        name: nginx
+        state: present
+      when: ansible_os_family == "RedHat"
